@@ -1,0 +1,29 @@
+.pay-admin{max-width:1100px}
+.pay-admin-muted{color:#9c9cb2;font-size:13px}
+.pay-key-form{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.pay-key-form input{flex:1;min-width:220px;background:#0d0e1b;border:1px solid #ffffff1f;border-radius:11px;padding:12px 14px;color:#fff}
+.pay-admin-actions{display:flex;gap:8px}
+.pay-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pay-tab{background:#ffffff08;border:1px solid #ffffff14;color:#b9b8cc;border-radius:30px;padding:9px 15px;font-size:12px;font-weight:700}
+.pay-tab span{background:#ffffff14;border-radius:20px;padding:1px 8px;margin-left:6px;font-size:11px}
+.pay-tab.active{background:#8b61ff2b;border-color:#a783ff;color:#d6c3ff}
+.pay-search{margin-bottom:14px;display:flex;align-items:center;gap:9px;background:#0d0e1b;border:1px solid #ffffff1a;border-radius:11px;padding:0 13px}
+.pay-search input{flex:1;background:transparent;border:0;outline:0;color:#fff;padding:12px 0}
+.pay-notice{background:#4bd18b14;border:1px solid #4bd18b33;color:#9ce5c0;border-radius:10px;padding:10px 13px;font-size:13px}
+.pay-empty{padding:34px;text-align:center;color:#85839c}
+.pay-list{display:flex;flex-direction:column;gap:11px}
+.pay-row{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;background:#12132200;background:#121322;border:1px solid #ffffff12;border-radius:14px;padding:15px 17px}
+.pay-row-main{display:flex;flex-direction:column;gap:5px;min-width:240px;flex:1}
+.pay-name{font-size:15px}
+.pay-event{color:#c6aaff;font-size:12px;font-weight:700}
+.pay-meta{display:flex;align-items:center;gap:6px;color:#9d9cb3;font-size:12px}
+.pay-row-side{display:flex;flex-direction:column;align-items:flex-end;gap:9px;justify-content:center}
+.pay-utr-chip{display:inline-flex;align-items:center;gap:8px;background:#0d0e1b;border:1px dashed #a783ff80;color:#fff;border-radius:9px;padding:9px 12px;font:700 14px 'Space Grotesk',monospace;letter-spacing:.8px}
+.pay-ticket{color:#9ce5c0;letter-spacing:1px}
+.pay-btns{display:flex;gap:8px;flex-wrap:wrap}
+.pay-btns button{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:800}
+.pay-btns button:disabled{opacity:.5;cursor:wait}
+.pay-approve{background:#2fbf7a;color:#04150c}
+.pay-reject{background:#ff6b6b22;color:#ff9b9b;border:1px solid #ff6b6b44!important}
+.pay-resend{background:#ffffff10;color:#ddd}
+@media(max-width:760px){.pay-row-side{align-items:flex-start}}

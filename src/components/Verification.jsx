@@ -1,0 +1,14 @@
+import { useEffect, useState } from 'react'
+import { ArrowLeft, BadgeCheck, Building2, CalendarCheck, Mail, Phone, TicketCheck, Trophy, UserRound } from 'lucide-react'
+import { api } from '../api'
+import '../styles/verification.css'
+const fmtDate=d=>{const x=new Date(`${d}T00:00:00`);return Number.isNaN(x.getTime())?d:x.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+export default function Verification({ code, onBack, onConfirm }) {
+ const [record,setRecord]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[events,setEvents]=useState([])
+ useEffect(()=>{api('/api/events').then(d=>setEvents(Array.isArray(d)?d:[])).catch(()=>{})},[])
+ useEffect(()=>{let active=true;api(`/api/registrations/${encodeURIComponent(code)}`).then(d=>{if(active)setRecord(d)}).catch(e=>{if(active)setError(e.message==='Failed to fetch'?'Cannot connect to the registration server.':e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[code])
+ if(loading)return <section className="work-card"><p>Verifying ticket with Phase 1 registration database…</p></section>
+ if(error)return <section className="work-card"><div className="verify-error">Ticket verification failed: {error}</div><button className="secondary-btn" onClick={onBack}><ArrowLeft size={16}/> Back to scan</button></section>
+ const ev=events.find(e=>e.id===record.eventId)
+ return <section className="work-card"><div className="work-heading"><div><span className="mini-label">STEP 02 · VERIFY DETAILS</span><h2>Participant found</h2><p>These details were retrieved from the Phase 1 registration database.</p></div><span className="verified-icon"><BadgeCheck/></span></div><div className="verified-banner"><BadgeCheck/><div><b>Valid SPARKLE'26 ticket</b><small>Registration record matched successfully</small></div></div><div className="event-banner"><Trophy/><div><span>Registered event</span><b>{ev?ev.title:'General registration'}</b>{ev&&<small>{ev.level.toUpperCase()} · {ev.category.replace('-',' ').toUpperCase()} · {fmtDate(ev.date)}</small>}</div></div><div className="participant-grid"><div><UserRound/><span>Participant</span><b>{record.fullName}</b></div><div><TicketCheck/><span>Ticket code</span><b>{record.ticketCode}</b></div><div><Mail/><span>Email</span><b>{record.email}</b></div><div><Phone/><span>Phone</span><b>{record.phone}</b></div><div><Building2/><span>College</span><b>{record.college}</b></div><div><CalendarCheck/><span>Department / Year</span><b>{record.department} · {record.year}</b></div></div>{record.checkedIn?<div className="already-banner">This participant is already marked present.</div>:<div className="verify-actions"><button className="secondary-btn" onClick={onBack}><ArrowLeft size={16}/> Scan another</button><button className="primary-btn" onClick={()=>onConfirm(record)}>Confirm attendance</button></div>}</section>
+}
