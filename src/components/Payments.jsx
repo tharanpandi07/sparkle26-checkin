@@ -66,7 +66,12 @@ export default function Payments() {
     setBusyId(row.id); setNotice(''); setError('')
     try {
       const r = await call(`/api/admin/payments/${row.id}/approve`, { method: 'POST' })
-      setNotice(`Approved ${row.fullName} – ticket ${r.ticketCode} emailed to ${row.email}.`)
+      if (r.alreadyApproved)
+        setNotice(`${row.fullName} was already approved (ticket ${r.ticketCode}). Use "Resend mail" if they did not get it.`)
+      else if (r.mailSent)
+        setNotice(`Approved ${row.fullName} – ticket ${r.ticketCode} emailed to ${row.email}.`)
+      else
+        setError(`Approved ${row.fullName} (ticket ${r.ticketCode}) but the email was NOT sent: ${r.mailError || 'unknown error'}. Fix the mail setup, then open the Approved tab and press "Resend mail".`)
       await load()
     } catch (e) { setError(e.message) } finally { setBusyId(null) }
   }
@@ -76,8 +81,9 @@ export default function Payments() {
     if (reason === null) return
     setBusyId(row.id); setNotice(''); setError('')
     try {
-      await call(`/api/admin/payments/${row.id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
-      setNotice(`Rejected ${row.fullName}. They have been emailed.`)
+      const r = await call(`/api/admin/payments/${row.id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
+      if (r.mailSent) setNotice(`Rejected ${row.fullName}. They have been emailed.`)
+      else setError(`Rejected ${row.fullName}, but the email was NOT sent: ${r.mailError || 'unknown error'}.`)
       await load()
     } catch (e) { setError(e.message) } finally { setBusyId(null) }
   }
@@ -85,9 +91,21 @@ export default function Payments() {
   async function resend(row) {
     setBusyId(row.id); setNotice(''); setError('')
     try {
-      await call(`/api/admin/payments/${row.id}/resend`, { method: 'POST' })
-      setNotice(`Welcome mail re-sent to ${row.email}.`)
+      const r = await call(`/api/admin/payments/${row.id}/resend`, { method: 'POST' })
+      if (r.mailSent) setNotice(`Welcome mail re-sent to ${row.email}.`)
+      else setError(`Mail to ${row.email} FAILED: ${r.mailError || 'unknown error'}.`)
     } catch (e) { setError(e.message) } finally { setBusyId(null) }
+  }
+
+  async function testMail() {
+    const to = window.prompt('Send a test mail to which email address?')
+    if (!to || !to.trim()) return
+    setNotice(''); setError('')
+    try {
+      const r = await call('/api/admin/payments/mail-test', { method: 'POST', body: JSON.stringify({ to: to.trim() }) })
+      if (r.mailSent) setNotice(`Test mail sent to ${to.trim()}. Mail setup is working.`)
+      else setError(`Test mail FAILED: ${r.mailError || 'unknown error'}`)
+    } catch (e) { setError(e.message) }
   }
 
   const copy = (text) => navigator.clipboard?.writeText(text).then(() => setNotice(`Copied ${text}`)).catch(() => {})
@@ -134,6 +152,7 @@ export default function Payments() {
           <p>Match the UTR and amount with your GPay history, then approve to issue the ticket.</p>
         </div>
         <div className="pay-admin-actions">
+          <button className="secondary-btn" onClick={testMail}><Mail size={15} /> Test mail</button>
           <button className="secondary-btn" onClick={load} disabled={loading}><RefreshCw size={15} /> Refresh</button>
           <button className="secondary-btn" onClick={logout}>Lock</button>
         </div>
