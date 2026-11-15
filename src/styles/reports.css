@@ -1,0 +1,17 @@
+.rep-totals{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.rep-totals>div{display:flex;align-items:center;gap:9px;background:#151626;border:1px solid #ffffff12;border-radius:12px;padding:11px 16px;color:#a98bff}
+.rep-totals span{font-size:11px;color:#a4a3b8}
+.rep-totals b{font:700 18px 'Space Grotesk';color:#fff;margin-left:4px}
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.rep-card{background:#121322;border:1px solid #ffffff12;border-radius:14px;padding:15px 16px;display:flex;flex-direction:column;gap:13px}
+.rep-top{display:flex;flex-direction:column;gap:7px}
+.rep-top>b{font-size:14px}
+.rep-badge{align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.6px;padding:3px 9px;border-radius:999px;background:#8b61ff22;color:#c9b6ff;border:1px solid #a78aff55}
+.rep-badge.junior{background:#ffb44b1a;color:#ffd08a;border-color:#ffb44b55}
+.rep-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rep-stats div{display:grid;gap:3px}
+.rep-stats span{font-size:10px;color:#85839c}
+.rep-stats b{font:700 16px 'Space Grotesk'}
+.rep-dl{display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:auto}
+.pay-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pay-badge-junior{display:inline-block;margin-left:8px;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;background:#ffb44b1a;color:#ffd08a;border:1px solid #ffb44b55}

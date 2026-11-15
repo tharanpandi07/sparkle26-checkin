@@ -3,6 +3,8 @@ import { BadgeCheck, XCircle, RefreshCw, Search, KeyRound, Mail, Phone, Copy, Se
 import { api } from '../api'
 import '../styles/payments.css'
 
+const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+
 const TABS = [
   { id: 'SUBMITTED', label: 'To verify' },
   { id: 'PAID', label: 'Approved' },
@@ -20,6 +22,8 @@ export default function Payments() {
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [events, setEvents] = useState([])
+  const [level, setLevel] = useState('all')
 
   const call = useCallback(
     (path, options = {}) => api(path, { ...options, headers: { 'X-Admin-Key': adminKey } }),
@@ -51,6 +55,18 @@ export default function Payments() {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    api('/api/events').then((d) => setEvents(Array.isArray(d) ? d : [])).catch(() => {})
+  }, [])
+
+  // junior events are school-student only, so those registrations always need manual approval
+  const levelOf = useCallback((r) => {
+    if (r.level) return String(r.level).toLowerCase()
+    const ev = events.find((e) => (r.eventId && e.id === r.eventId) || norm(e.title) === norm(r.eventTitle))
+    return ev?.level || ''
+  }, [events])
+  const isJunior = (r) => levelOf(r) === 'junior'
+
   // new submissions show up on their own
   useEffect(() => {
     if (!adminKey || tab !== 'SUBMITTED') return
@@ -60,7 +76,9 @@ export default function Payments() {
 
   async function approve(row) {
     const ok = window.confirm(
-      `Approve ${row.fullName}?\n\nCheck your GPay history first:\n• Amount: ₹${row.amount}\n• UTR: ${row.utr}\n\nThis issues the ticket and emails ${row.email}.`,
+      isJunior(row)
+        ? `Approve ${row.fullName}?\n\nJUNIOR event – school students only.\nCheck the school name / class (${row.college}${row.year ? ' · ' + row.year : ''}) before approving.${row.utr ? `\n\nAlso verify GPay:\n• Amount: ₹${row.amount}\n• UTR: ${row.utr}` : ''}\n\nThis issues the ticket and emails ${row.email}.`
+        : `Approve ${row.fullName}?\n\nCheck your GPay history first:\n• Amount: ₹${row.amount}\n• UTR: ${row.utr}\n\nThis issues the ticket and emails ${row.email}.`,
     )
     if (!ok) return
     setBusyId(row.id); setNotice(''); setError('')
@@ -77,7 +95,7 @@ export default function Payments() {
   }
 
   async function reject(row) {
-    const reason = window.prompt(`Reject ${row.fullName}? Reason shown to the participant:`, 'Payment not found in our account for this transaction ID.')
+    const reason = window.prompt(`Reject ${row.fullName}? Reason shown to the participant:`, isJunior(row) ? 'We could not verify your school details (Junior events are for Class 8 to 12 students).' : 'Payment not found in our account for this transaction ID.')
     if (reason === null) return
     setBusyId(row.id); setNotice(''); setError('')
     try {
@@ -112,11 +130,12 @@ export default function Payments() {
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return data.items
-    return data.items.filter((r) =>
+    const byLevel = level === 'all' ? data.items : data.items.filter((r) => levelOf(r) === level)
+    if (!q) return byLevel
+    return byLevel.filter((r) =>
       [r.fullName, r.email, r.phone, r.college, r.utr, r.reference, r.ticketCode, r.eventTitle]
         .some((v) => String(v || '').toLowerCase().includes(q)))
-  }, [data.items, query])
+  }, [data.items, query, level, levelOf])
 
   if (!adminKey) {
     return (
@@ -166,6 +185,14 @@ export default function Payments() {
         ))}
       </div>
 
+      <div className="pay-filter">
+        {[['all', 'All events'], ['junior', 'Junior (School)'], ['senior', 'Senior']].map(([id, label]) => (
+          <button key={id} className={level === id ? 'pay-tab active' : 'pay-tab'} onClick={() => setLevel(id)}>
+            {label} <span>{id === 'all' ? data.items.length : data.items.filter((r) => levelOf(r) === id).length}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="present-search pay-search">
         <Search size={16} />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, UTR, phone, email, reference…" />
@@ -184,9 +211,9 @@ export default function Payments() {
             <article className="pay-row" key={r.id}>
               <div className="pay-row-main">
                 <b className="pay-name">{r.fullName}</b>
-                <span className="pay-event">{r.eventTitle} · ₹{r.amount}</span>
+                <span className="pay-event">{r.eventTitle} · ₹{r.amount}{isJunior(r) && <span className="pay-badge-junior">JUNIOR · SCHOOL</span>}</span>
                 <span className="pay-meta"><Mail size={13} /> {r.email}</span>
-                <span className="pay-meta"><Phone size={13} /> {r.phone} · {r.college}</span>
+                <span className="pay-meta"><Phone size={13} /> {r.phone} · {isJunior(r) ? 'School: ' : ''}{r.college}{isJunior(r) && r.year ? ` · ${r.year}` : ''}</span>
                 <small className="pay-meta">
                   {r.reference}
                   {r.submittedAt && ` · submitted ${new Date(r.submittedAt).toLocaleString()}`}
@@ -201,7 +228,7 @@ export default function Payments() {
                 )}
                 {r.ticketCode && <small className="pay-ticket">{r.ticketCode}</small>}
                 <div className="pay-btns">
-                  {r.status !== 'PAID' && r.status !== 'PENDING' && (
+                  {r.status !== 'PAID' && (r.status !== 'PENDING' || isJunior(r)) && (
                     <>
                       <button className="pay-approve" disabled={busyId === r.id} onClick={() => approve(r)}><BadgeCheck size={15} /> Approve</button>
                       {r.status !== 'REJECTED' && (
