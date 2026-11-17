@@ -22,6 +22,7 @@ const presentRows = (people) =>
     Department: p.department || '',
     Year: p.year || '',
     Event: p.eventTitle || '',
+    Team: p.teamSize > 1 ? `${p.teamName || 'Team'} (${p.memberNo || 1}/${p.teamSize})` : '',
     'Ticket code': p.ticketCode || '',
     Type: p.source === 'ONSPOT' ? 'On-spot' : 'Online',
     'Amount (₹)': p.amount ?? '',
