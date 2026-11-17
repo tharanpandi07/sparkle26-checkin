@@ -6,6 +6,7 @@ import Scan from './components/Scan'
 import Verification from './components/Verification'
 import Present from './components/Present'
 import Payments from './components/Payments'
+import Reports from './components/Reports'
 import OnSpot from './components/OnSpot'
 import './styles/global.css'
 export default function App(){
@@ -22,6 +23,7 @@ export default function App(){
   {page==='verification'&&<><Verification code={code} onBack={()=>setPage('scan')} onConfirm={confirmAttendance}/>{busy&&<div className="busy-overlay">Saving attendance…</div>}{error&&<p className="app-error">{error}</p>}</>}
   {page==='present'&&<Present result={result} accessKey={key}/>}
   {page==='payments'&&<Payments/>}
+  {page==='reports'&&<Reports accessKey={key}/>}
   {page==='onspot'&&<OnSpot accessKey={key} onDone={()=>loadSummary(key).catch(()=>{})}/>}
  </Dashboard>
 }
