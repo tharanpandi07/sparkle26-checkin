@@ -11,7 +11,9 @@ const TABS = [
 ]
 
 // "Team of 4" / "" - one registration = one team; the leader row carries the payment, every member gets own ticket + mail
-const isTeam = (r) => (r.teamSize || 1) > 1
+const isTeam = (r) => (r.teamSize || 1) > 1 && Array.isArray(r.members) && r.members.length > 0
+// on-spot team members are separate rows (own ticket + own fee), so they only get a small chip
+const isTeamMemberRow = (r) => (r.teamSize || 1) > 1 && !isTeam(r)
 const memberEmails = (r) => (r.members?.length ? r.members.map((m) => m.email) : [r.email])
 
 export default function Payments() {
@@ -196,6 +198,7 @@ export default function Payments() {
                 <b className="pay-name">
                   {r.fullName}
                   {isTeam(r) && <span className="pay-team-chip"><Users size={12} /> Team of {r.teamSize}{r.teamName ? ` · ${r.teamName}` : ''}</span>}
+                  {isTeamMemberRow(r) && <span className="pay-team-chip"><Users size={12} /> {r.teamName || 'Team'} · member {r.memberNo || 1}/{r.teamSize}</span>}
                 </b>
                 <span className="pay-event">{r.eventTitle} · ₹{r.amount}{isTeam(r) ? ` (${r.teamSize} × ₹${Math.round(r.amount / r.teamSize)})` : ''}</span>
                 {isTeam(r) ? (
