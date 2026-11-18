@@ -25,3 +25,28 @@
 .onspot-event b {
   color: #c9b6ff;
 }
+
+/* ---- events chips / team ---- */
+.onspot-sub{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#e1d3ff;margin-bottom:2px}
+.onspot-sub small,.ev-group-title small{font-size:11px;font-weight:500;color:#85839c}
+.onspot-muted{color:#85839c;font-size:12px}
+.ev-group-title{font-size:11px;font-weight:800;letter-spacing:.8px;color:#a4a3b8;margin:10px 0 7px;text-transform:uppercase}
+.ev-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ev-chip{display:inline-flex;align-items:center;gap:7px;background:#ffffff0b;border:1px solid #ffffff1f;color:#ddd;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.ev-chip em{font-style:normal;font-size:10px;color:#ffd08a;background:#ffb44b1a;border-radius:999px;padding:1px 7px}
+.ev-chip.on{background:#8b61ff2b;border-color:#a783ff;color:#fff}
+.ev-chip:disabled{opacity:.35;cursor:not-allowed}
+.ev-tick{display:grid;place-items:center;width:16px;height:16px;border-radius:5px;border:1px solid #ffffff40;background:#0d0e1b;color:#fff}
+.ev-chip.on .ev-tick{background:#a783ff;border-color:#a783ff}
+.size-btns{display:flex;gap:8px;margin-top:6px}
+.size-btn{width:44px;height:40px;border-radius:10px;background:#ffffff0b;border:1px solid #ffffff1f;color:#ddd;font:700 15px 'Space Grotesk';cursor:pointer}
+.size-btn.active{background:#8b61ff2b;border-color:#a783ff;color:#fff}
+.member-card{background:#121322;border:1px solid #ffffff12;border-radius:12px;padding:13px 14px}
+.member-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:8px}
+.member-grid label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:#bdbcd0}
+.member-grid input{background:#0d0e1b;border:1px solid #ffffff1f;border-radius:11px;padding:12px 13px;color:#fff;font-weight:500;outline:0}
+.member-grid input:focus{border-color:#a783ff}
+.onspot-collect span{color:#ffd08a;font-size:12px}
+.onspot-tickets{display:flex;flex-direction:column;gap:8px;align-items:center;margin:6px 0}
+.onspot-tickets .onspot-ticket{margin:0;min-width:280px}
+@media(max-width:700px){.member-grid{grid-template-columns:1fr}}

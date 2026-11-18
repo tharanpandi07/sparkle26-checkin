@@ -67,7 +67,7 @@ export default function Reports({ accessKey }) {
         <div>
           <span className="mini-label">PAYMENTS · REPORTS</span>
           <h2>Event reports</h2>
-          <p>One Excel sheet per event for the coordinators – approved registrations, on-spot entries and attendance.</p>
+          <p>One Excel sheet per event for the coordinators – approved registrations, on-spot entries, team members (one row each) and attendance.</p>
         </div>
         <div className="pay-admin-actions">
           <button className="secondary-btn" onClick={load} disabled={loading}><RefreshCw size={15} /> Refresh</button>
@@ -110,6 +110,7 @@ export default function Reports({ accessKey }) {
               </div>
               <div className="rep-stats">
                 <div><span>Registered</span><b>{r.total}</b></div>
+                {r.teams.length > 0 && <div><span>Teams</span><b>{r.teams.length}</b></div>}
                 <div><span>Present</span><b>{r.present}</b></div>
                 <div><span>Absent</span><b>{r.total - r.present}</b></div>
               </div>

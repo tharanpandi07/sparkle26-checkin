@@ -8,7 +8,7 @@
 .rep-top>b{font-size:14px}
 .rep-badge{align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.6px;padding:3px 9px;border-radius:999px;background:#8b61ff22;color:#c9b6ff;border:1px solid #a78aff55}
 .rep-badge.junior{background:#ffb44b1a;color:#ffd08a;border-color:#ffb44b55}
-.rep-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rep-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:8px}
 .rep-stats div{display:grid;gap:3px}
 .rep-stats span{font-size:10px;color:#85839c}
 .rep-stats b{font:700 16px 'Space Grotesk'}

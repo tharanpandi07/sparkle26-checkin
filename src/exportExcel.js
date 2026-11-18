@@ -63,12 +63,14 @@ export function buildEventReports(events, paid, present) {
 
     paid.filter((r) => matches(ev, r)).forEach((r) => {
       const pr = presentByTicket.get(r.ticketCode)
+      const onspot = r.source === 'ONSPOT'
       if (r.ticketCode) seen.add(r.ticketCode)
       rows.push({
         name: r.fullName, email: r.email, phone: r.phone, college: r.college,
         department: r.department, year: r.year, ticketCode: r.ticketCode,
-        type: 'Online', amount: r.amount, mode: 'GPay QR', utr: r.utr,
-        payStatus: 'Approved', present: !!pr, checkedInAt: pr?.checkedInAt,
+        type: onspot ? 'On-spot' : 'Online', amount: r.amount, mode: onspot ? r.paymentMode : 'GPay QR', utr: r.utr,
+        payStatus: onspot ? 'Paid at desk' : 'Approved', present: !!pr, checkedInAt: pr?.checkedInAt,
+        teamKey: r.teamCode || '', teamName: r.teamName || '', teamSize: r.teamSize || 0, memberNo: r.memberNo || 0,
       })
     })
 
@@ -81,11 +83,21 @@ export function buildEventReports(events, paid, present) {
         type: onspot ? 'On-spot' : 'Online', amount: p.amount,
         mode: onspot ? p.paymentMode : 'GPay QR', utr: '',
         payStatus: onspot ? 'Paid at desk' : 'Approved', present: true, checkedInAt: p.checkedInAt,
+        teamKey: p.teamName ? `n:${p.teamName}` : '', teamName: p.teamName || '', teamSize: p.teamSize || 0, memberNo: p.memberNo || 0,
       })
     })
 
+    // keep every team together (member 1, 2, 3 ...) - individuals stay in their original order
+    const groups = new Map()
+    rows.forEach((r, i) => {
+      const k = r.teamKey || `solo-${i}`
+      if (!groups.has(k)) groups.set(k, [])
+      groups.get(k).push(r)
+    })
+    const ordered = [...groups.values()].flatMap((g) => g.sort((x, y) => x.memberNo - y.memberNo))
+
     const junior = ev.level === 'junior'
-    const sheetRows = rows.map((r, i) => ({
+    const sheetRows = ordered.map((r, i) => ({
       'S.No': i + 1,
       Name: r.name || '',
       Email: r.email || '',
@@ -93,6 +105,9 @@ export function buildEventReports(events, paid, present) {
       [junior ? 'School' : 'College']: r.college || '',
       Department: r.department || '',
       [junior ? 'Class' : 'Year']: r.year || '',
+      'Team name': r.teamSize > 1 ? r.teamName : '',
+      'Member no.': r.teamSize > 1 ? `${r.memberNo || ''}${r.memberNo === 1 ? ' (Leader)' : ''}` : '',
+      'Team size': r.teamSize > 1 ? r.teamSize : '',
       'Ticket code': r.ticketCode || '',
       Registration: r.type,
       'Pass fee paid (₹)': r.amount ?? '',
@@ -103,11 +118,28 @@ export function buildEventReports(events, paid, present) {
       'Check-in time': when(r.checkedInAt),
     }))
 
+    // one row per team: team name + each member's name in a separate cell
+    const teams = [...groups.values()].filter((g) => g[0].teamSize > 1).map((g) => {
+      const row = {
+        'Team name': g[0].teamName,
+        'Team size': g[0].teamSize,
+        Leader: g[0].name || '',
+        'Leader phone': g[0].phone || '',
+        'Leader email': g[0].email || '',
+        [junior ? 'School' : 'College']: g[0].college || '',
+        'Fee paid (₹)': g.reduce((sum, m) => sum + (Number(m.amount) || 0), 0),
+      }
+      for (let n = 0; n < 5; n++) row[`Member ${n + 1}`] = g[n]?.name || ''
+      row['Present'] = `${g.filter((m) => m.present).length}/${g[0].teamSize}`
+      return row
+    })
+
     return {
       event: ev,
       rows: sheetRows,
+      teams,
       total: sheetRows.length,
-      present: rows.filter((r) => r.present).length,
+      present: ordered.filter((r) => r.present).length,
     }
   })
 }
@@ -125,7 +157,7 @@ export function summarizeReports(paid, present) {
   }
 }
 
-const HEADERS = ['S.No', 'Name', 'Email', 'Phone', 'College', 'Department', 'Year', 'Ticket code',
+const HEADERS = ['S.No', 'Name', 'Email', 'Phone', 'College', 'Department', 'Year', 'Team name', 'Member no.', 'Team size', 'Ticket code',
   'Registration', 'Pass fee paid (₹)', 'Payment mode', 'UTR / Txn ID', 'Payment status', 'Attendance', 'Check-in time']
 
 function eventSheet(rep) {
@@ -151,10 +183,18 @@ const safeSheetName = (title, used) => {
   return name
 }
 
-// one .xlsx per event
+function teamsSheet(teams) {
+  const ws = XLSX.utils.json_to_sheet(teams)
+  autoWidth(ws, teams, Object.keys(teams[0]))
+  return ws
+}
+
+// one .xlsx per event (+ a "Teams" sheet when the event has teams)
 export function downloadEventReport(rep) {
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, eventSheet(rep), safeSheetName(rep.event.title, new Set()))
+  const used = new Set(['teams'])
+  XLSX.utils.book_append_sheet(wb, eventSheet(rep), safeSheetName(rep.event.title, used))
+  if (rep.teams?.length) XLSX.utils.book_append_sheet(wb, teamsSheet(rep.teams), 'Teams')
   downloadWorkbook(wb, `sparkle26-${slug(rep.event.title)}-${stamp()}.xlsx`)
 }
 
@@ -165,15 +205,19 @@ export function downloadAllEventsWorkbook(reports, totals) {
     'S.No': i + 1,
     Event: r.event.title,
     Level: r.event.level === 'junior' ? 'Junior (School)' : 'Senior',
+    Teams: r.teams.length,
     Registered: r.total,
     Present: r.present,
     Absent: r.total - r.present,
   }))
-  if (totals) summary.push({ 'S.No': '', Event: 'ALL EVENTS (unique participants)', Level: '', Registered: totals.registered, Present: totals.present, Absent: totals.registered - totals.present })
+  if (totals) summary.push({ 'S.No': '', Event: 'ALL EVENTS (unique participants)', Level: '', Teams: '', Registered: totals.registered, Present: totals.present, Absent: totals.registered - totals.present })
   const sws = XLSX.utils.json_to_sheet(summary)
   autoWidth(sws, summary, Object.keys(summary[0] || { Event: '' }))
   XLSX.utils.book_append_sheet(wb, sws, 'Summary')
   const used = new Set(['summary'])
+  const allTeams = reports.flatMap((r) => r.teams.map((t) => ({ Event: r.event.title, ...t })))
+  if (allTeams.length) XLSX.utils.book_append_sheet(wb, teamsSheet(allTeams), 'Teams')
+  used.add('teams')
   reports.forEach((r) => XLSX.utils.book_append_sheet(wb, eventSheet(r), safeSheetName(r.event.title, used)))
   downloadWorkbook(wb, `sparkle26-all-events-${stamp()}.xlsx`)
 }
